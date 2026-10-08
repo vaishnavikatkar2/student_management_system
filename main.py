@@ -16,13 +16,17 @@ app.add_middleware(
     allow_methods=["*"],              # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],              # Allows all HTTP headers
 )
-connection = psycopg2.connect(
-    host = os.getenv("DB_HOST"),
-    port = os.getenv("DB_PORT"),
-    database = os.getenv("DB_DATABASE"),
-    user = os.getenv("DB_USER"),
-    password = os.getenv("DB_PASSWORD")
-)
+# connection = psycopg2.connect(
+#     host = os.getenv("DB_HOST"),
+#     port = os.getenv("DB_PORT"),
+#     database = os.getenv("DB_DATABASE"),
+#     user = os.getenv("DB_USER"),
+#     password = os.getenv("DB_PASSWORD")
+# )
+
+
+#connected to remote database neon
+connection = psycopg2.connect('postgresql://neondb_owner:npg_c4GQOEFai3YW@ep-wispy-firefly-b3mbtbts-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
 
 cursor = connection.cursor()
 
