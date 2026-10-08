@@ -3,10 +3,19 @@ import psycopg2
 from fastapi import FastAPI, HTTPException
 import os
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
 
 load_dotenv()
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # Allows all
+    allow_credentials=False,           # Allows cookies/headers to be sent
+    allow_methods=["*"],              # Allows all standard HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],              # Allows all HTTP headers
+)
 connection = psycopg2.connect(
     host = os.getenv("DB_HOST"),
     port = os.getenv("DB_PORT"),
