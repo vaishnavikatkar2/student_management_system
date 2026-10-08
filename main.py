@@ -28,7 +28,7 @@ app.add_middleware(
 #connected to remote database neon
 connection = psycopg2.connect('postgresql://neondb_owner:npg_c4GQOEFai3YW@ep-wispy-firefly-b3mbtbts-pooler.c-4.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require')
 
-cursor = connection.cursor()
+
 
 class Student(BaseModel):
     id: int = None
@@ -38,6 +38,7 @@ class Student(BaseModel):
 #get all students
 @app.get('/students')
 def get_all_students():
+    cursor = connection.cursor()
     cursor.execute('SELECT * FROM students')
     rows = cursor.fetchall()
     print(rows)
@@ -48,11 +49,13 @@ def get_all_students():
             'name' : row[1],
             'course' : row[2]
         })
+    cursor.close()
     return result
 
 @app.get('/students/{id}')
 def get_single_student(id: int):
     try:
+        cursor = connection.cursor()
         cursor.execute('SELECT * FROM students WHERE id=%s', (id,))
         row = cursor.fetchone()
         return{
@@ -61,32 +64,40 @@ def get_single_student(id: int):
             'course' : row[2]
         }
     except:
+        cursor.close()
         raise HTTPException(status_code=404, detail='invalid Student ID')
 
 #Create Student record
 @app.post('/students')
 def create_student_record(student: Student):
     try:
+        cursor = connection.cursor()
         cursor.execute('insert into students values(%s, %s, %s)',(student.id, student.name, student.course))
         connection.commit()
+        cursor.close()
         raise HTTPException(status_code=201, detail='Student Record Created Successfully...!')
     except psycopg2.IntegrityError:
         connection.rollback()
+        cursor.close()
         raise HTTPException(status_code=404, detail='student id already exis!')
 
 
 # Update Student Record        
 @app.put('/students/{id}')
 def update_student_record(id:int, student: Student):
+    cursor = connection.cursor()
     cursor.execute('UPDATE students SET id=%s, name=%s, course=%s WHERE id=%s',(student.id, student.name, student.course, id))
     if(cursor.rowcount==0):
-      raise HTTPException(status_code=404, detail='Invalid ID')    
+        cursor.close()
+        raise HTTPException(status_code=404, detail='Invalid ID')    
     connection.commit()
+    cursor.close()
     raise HTTPException(status_code=200, detail='Student Record Created Successfully...!')
 
 # Partial Update
 @app.patch('/students/{id}')
 def partial_update(id: int, student:Student):
+    cursor = connection.cursor()
     if(student.id != None):
         cursor.execute('UPDATE students SET id=%s WHERE id=%s' , (student.id, id))
     
@@ -98,15 +109,18 @@ def partial_update(id: int, student:Student):
     if(cursor.rowcount==0):
         raise HTTPException(status_code=404, detail='Invalid ID')    
     connection.commit()
+    cursor.close()
     raise HTTPException(status_code=200, detail='Partial Update Successfully...!')
 
 # Delete Student Record        
 @app.delete('/students/{id}')
 def delete_student_record(id: int):
+    cursor = connection.cursor()
     cursor.execute('DELETE FROM students WHERE id=%s', (id,) )
 
     if cursor.rowcount == 0:
         raise HTTPException(status_code=404, detail='Invalid ID')
 
     connection.commit()
+    cursor.close()
     raise HTTPException(status_code=200,detail='Student Record deleted Successfully...!' )
